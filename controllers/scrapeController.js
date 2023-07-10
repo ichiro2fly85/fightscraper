@@ -25,7 +25,7 @@ scrapeController.init = () => {
   scrapeController.getSchedules();  
 
 
-  cron.schedule('0 8 * * 3', () => {
+  cron.schedule('0 8 * * *', () => {
     scrapeController.getSchedules();
   }, {
     scheduled: true,
