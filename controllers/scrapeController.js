@@ -11,6 +11,7 @@ let Parser = require('rss-parser');
 
 import path from 'path';
 import key from '../config';
+import { log } from 'console';
 
 
 let rssItemArray = [];
@@ -74,7 +75,7 @@ scrapeController.getSchedules = async () => {
     tempBrod = tempFullString[3];
 
 
-    tempDate = tempDate[1].split("2022");
+    tempDate = tempDate[1].split(moment().year().toString());
     tempVS = tempDate[1];
 
     tempDate = moment(tempDate[0], "MMM Do").format('llll');

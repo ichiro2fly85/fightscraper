@@ -1,3 +1,3 @@
-const password = "*q7qM#LzPp%ZK#";
+const password = "";
 
 export default password;
