@@ -1,5 +1,9 @@
 const express = require('express');
-const port = (process.env.VCAP_APP_PORT || process.env.port || 3150);
+const port = 3150;
+const ssl_port = 4150;
+const http = require('http');
+const https = require("https");
+const fs = require("fs");
 
 import routes from './routes';
 import scrapeController from './controllers/scrapeController';
@@ -16,9 +20,22 @@ app.use(function(req, res, next) {
 
 });
 
-app.use('/api/v1', routes);
+http.createServer(app).listen(port, ()=>{
+	console.log("[APP]", `Listening on port ...${port}`)
+});
 
-app.listen(port, () => console.log("[APP]", `Listening on port ...${port}`));
+https.createServer(
+	{
+	  key: fs.readFileSync("privkey.pem"),
+	  cert: fs.readFileSync("fullchain.pem")	
+	},
+        app
+     )
+     .listen(ssl_port, ()=>{
+	    console.log("[APP]", `SSL Listening on port ...${ssl_port}`)
+     });
+
+app.use('/api/v1', routes);
 
 scrapeController.init();
 

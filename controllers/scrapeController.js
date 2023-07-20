@@ -21,12 +21,12 @@ let scheduleObject = {};
 
 scrapeController.init = () => {
 
-  console.log("[INFO]", "(scrapeController)", "APP INITIALIZE");
+  console.log("[INFO]", "(scrapeController)", "APP INITIALIZE \n");
 
-  scrapeController.getSchedules();  
+  //scrapeController.getSchedules();  
 
 
-  cron.schedule('0 8 * * *', () => {
+  cron.schedule('0 */6 * * *', () => {
     scrapeController.getSchedules();
   }, {
     scheduled: true,
@@ -37,7 +37,10 @@ scrapeController.init = () => {
 
 scrapeController.getSchedules = async () => {
 
+  console.log(moment().tz("America/New_York").format("LLLL"));
   console.log("[INFO]", "(scrapeController)", "CREATING SCHEDULE OBJECT");
+
+  let eventArray = [];
 
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
@@ -60,7 +63,6 @@ scrapeController.getSchedules = async () => {
     uniqueChars.splice(index, 1);
   }
 
-  let eventArray = [];
 
   uniqueChars.forEach((element, i) => {
     let eventObject = {};
@@ -121,12 +123,14 @@ scrapeController.getSchedules = async () => {
 
 
   scrapeController.getRss();
-  
 
 };
 
 scrapeController.getRss = async () => {
+
   console.log("[INFO]", "(scrapeController)", "CREATING RSS OBJECT");
+
+  rssItemArray = [];
 
   let parser = new Parser({
     customFields: {
@@ -139,7 +143,6 @@ scrapeController.getRss = async () => {
 
   let feed = await parser.parseURL('https://boxingjunkie.usatoday.com/feed');
 
-  
 
   feed.items.forEach(item => {
 
@@ -149,17 +152,16 @@ scrapeController.getRss = async () => {
     cacheObject.description = item.description;
     cacheObject.link = item.link;
     cacheObject.image = item['media:thumbnail'].$.url;
-    cacheObject.date = moment(item.pubDate).format('LL'); 
+    cacheObject.date = moment(item.pubDate).format('LL');
 
     rssItemArray.push(cacheObject);
 
   });
 
   //console.log(rssItemArray);
-
   scrapeController.finish();
 
-  
+  return rssItemArray;
 
 }
 

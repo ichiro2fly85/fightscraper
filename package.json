@@ -32,7 +32,7 @@
     "minimatch": "^3.1.2",
     "mkdirp-classic": "^0.5.3",
     "moment": "^2.29.4",
-    "moment-timezone": "^0.5.37",
+    "moment-timezone": "^0.5.43",
     "ms": "^2.1.2",
     "node-cron": "^3.0.2",
     "node-fetch": "^2.6.7",
