@@ -1,17 +1,19 @@
 const scrapeController = {};
-const fs = require('fs/promises');
-const puppeteer = require('puppeteer');
-const cron = require('node-cron');
-const { create } = require('xmlbuilder2');
-const moment = require('moment-timezone');
 
-let Client = require('ssh2-sftp-client');
-let xmlParser = require('xml2json');
-let Parser = require('rss-parser');
+
+import fs from 'fs/promises';
+import puppeteer from 'puppeteer';
+import cron from 'node-cron';
+import { create } from 'xmlbuilder2'
+import moment from 'moment-timezone';
+
+import Client from 'ssh2-sftp-client';
+import xmlParser from 'xml2json';
+import Parser from 'rss-parser';
 
 import path from 'path';
-import key from '../config';
-import { log } from 'console';
+import key from '../config.js';
+import basedir from '../pathFinder.js';
 
 
 let rssItemArray = [];
@@ -23,7 +25,7 @@ scrapeController.init = () => {
 
   console.log("[INFO]", "(scrapeController)", "APP INITIALIZE \n");
 
-  //scrapeController.getSchedules();  
+  scrapeController.getSchedules();  
 
 
   cron.schedule('0 */6 * * *', () => {
@@ -144,19 +146,36 @@ scrapeController.getRss = async () => {
   let feed = await parser.parseURL('https://boxingjunkie.usatoday.com/feed');
 
 
-  feed.items.forEach(item => {
 
-    let cacheObject = {};
+   for (let i = 0; i < feed.items.length; i++) {
+    const item = feed.items[i];
 
-    cacheObject.title = item.title;
-    cacheObject.description = item.description;
-    cacheObject.link = item.link;
-    cacheObject.image = item['media:thumbnail'].$.url;
-    cacheObject.date = moment(item.pubDate).format('LL');
+     let cacheObject = {};
+ 
+     cacheObject.title = item.title;
+ 
+     if (item.description[0].indexOf('https://www.youtube.com/watch?v=') > -1) {
+       let tempDesc = item.description[0];
+       let tempslice = tempDesc.slice(tempDesc.indexOf("https://www.youtube.com/watch?v="), -1);
+       let tempsplit = tempslice.split(" ")[0];
 
-    rssItemArray.push(cacheObject);
+       let newItemDescription = tempDesc.replace(tempsplit, '')
 
-  });
+       cacheObject.description = newItemDescription;
+       cacheObject.descURL = tempsplit;
+       
+     } else {
+      cacheObject.description = item.description[0];
+     }
+
+     cacheObject.link = item.link;
+     cacheObject.image = item['media:thumbnail'].$.url;
+     cacheObject.date = moment(item.pubDate).format('LL');
+ 
+     rssItemArray.push(cacheObject);
+   }
+
+  
 
   //console.log(rssItemArray);
   scrapeController.finish();
@@ -169,7 +188,7 @@ scrapeController.getRss = async () => {
 scrapeController.finish = () => {
 
   let sftp = new Client();
-  let filePath = path.join(__basedir, 'fights.xml');
+  let filePath = path.join(basedir, 'fights.xml');
 
   sftp.connect({
     host: 'dstacks.net',

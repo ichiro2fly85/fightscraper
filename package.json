@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "A task that grabs information from the website specified",
   "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
+  },
   "dependencies": {
     "agent-base": "^6.0.2",
     "balanced-match": "^1.0.2",
@@ -62,10 +67,6 @@
     "xml2json": "^0.12.0",
     "xmlbuilder2": "^3.0.2",
     "yauzl": "^2.10.0"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node -r esm app.js"
   },
   "author": "dxswp",
   "license": "ISC"

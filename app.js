@@ -1,16 +1,15 @@
-const express = require('express');
 const port = 3150;
 const ssl_port = 4150;
-const http = require('http');
-const https = require("https");
-const fs = require("fs");
 
-import routes from './routes';
-import scrapeController from './controllers/scrapeController';
+import * as fs from 'fs';
+import http from 'http';
+import https from 'https';
+import express from 'express';
+
+import routes from './routes.js';
+import scrapeController from './controllers/scrapeController.js';
 
 const app = express();
-
-global.__basedir = __dirname;
 
 app.use(function(req, res, next) {
 
