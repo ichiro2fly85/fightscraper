@@ -15,25 +15,33 @@ import path from 'path';
 import key from '../config.js';
 import basedir from '../pathFinder.js';
 
-
-let rssItemArray = [];
-let scheduleObject = {};
+var masterObject = {};
 
 
-
-scrapeController.init = () => {
+scrapeController.init = async () => {
 
   console.log("[INFO]", "(scrapeController)", "APP INITIALIZE \n");
 
-  scrapeController.getSchedules();  
+  scrapeController.main();  
 
 
-  cron.schedule('0 */6 * * *', () => {
-    scrapeController.getSchedules();
+  cron.schedule('0 */2 * * *', () => {
+    scrapeController.main();
   }, {
     scheduled: true,
     timezone: "America/New_York"
   });
+
+};
+
+scrapeController.main = async () => {
+
+  masterObject = {};
+
+  masterObject.schedule = await scrapeController.getSchedules();
+  masterObject.news = await scrapeController.getRss();
+  await scrapeController.finish();
+
 
 };
 
@@ -43,6 +51,8 @@ scrapeController.getSchedules = async () => {
   console.log("[INFO]", "(scrapeController)", "CREATING SCHEDULE OBJECT");
 
   let eventArray = [];
+  let rssItemArray = [];
+  let scheduleObject = {};
 
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
@@ -64,7 +74,8 @@ scrapeController.getSchedules = async () => {
   if (index > -1) {
     uniqueChars.splice(index, 1);
   }
-
+  
+  let nextYear = moment(moment().add(1, 'years')).format('YYYY').toString();
 
   uniqueChars.forEach((element, i) => {
     let eventObject = {};
@@ -77,9 +88,9 @@ scrapeController.getSchedules = async () => {
     tempLoc = tempFullString[1];
     tempTime = tempFullString[2] !== "" ? tempFullString[2] : "TBA";
     tempBrod = tempFullString[3];
-
-
-    tempDate = tempDate[1].split(moment().year().toString());
+  
+    
+    tempDate = tempDate[1].indexOf(nextYear) > -1 ? tempDate[1].split(nextYear) : tempDate[1].split(moment().year().toString());
     tempVS = tempDate[1];
 
     tempDate = moment(tempDate[0], "MMM Do").format('llll');
@@ -123,8 +134,7 @@ scrapeController.getSchedules = async () => {
 
    scheduleObject = xmlParser.toJson(xml);
 
-
-  scrapeController.getRss();
+  return scheduleObject;
 
 };
 
@@ -132,7 +142,7 @@ scrapeController.getRss = async () => {
 
   console.log("[INFO]", "(scrapeController)", "CREATING RSS OBJECT");
 
-  rssItemArray = [];
+  let rssItemArray = [];
 
   let parser = new Parser({
     customFields: {
@@ -144,7 +154,6 @@ scrapeController.getRss = async () => {
   });
 
   let feed = await parser.parseURL('https://boxingjunkie.usatoday.com/feed');
-
 
 
    for (let i = 0; i < feed.items.length; i++) {
@@ -177,26 +186,22 @@ scrapeController.getRss = async () => {
 
   
 
-  //console.log(rssItemArray);
-  scrapeController.finish();
-
-  return rssItemArray;
+  return rssItemArray
 
 }
 
-
-scrapeController.finish = () => {
+scrapeController.finish = async () => {
 
   let sftp = new Client();
   let filePath = path.join(basedir, 'fights.xml');
 
   sftp.connect({
-    host: 'dstacks.net',
+    host: 'dstacks.com',
     port: '22',
-    username: 'dh_aqpc98',
+    username: 'dh_9q4mui',
     password: key
   }).then(() => {
-    return sftp.put(filePath, '/home/dh_aqpc98/dstacks.net/fights.xml');
+    return sftp.put(filePath, '/home/dh_9q4mui/dstacks.com/fights.xml');
   }).then(() => {
     return sftp.end();
   }).catch(err => {
@@ -210,23 +215,27 @@ scrapeController.finish = () => {
 
 
 scrapeController.getRssJSON = (req, res) => {
-  console.log(["INFO", "(scrapeController)", "REQUEST EVENTS LENGTH: " + rssItemArray.length]);
+  console.log(["INFO", "(scrapeController)", "REQUEST EVENTS LENGTH: " + masterObject.news.length]);
 
   res.status(200).json({
     success: true,
-    data: rssItemArray
-  })
+    data: masterObject.news
+  });
+
+  
 }
 
 
 
-scrapeController.getEventSchedule = (req, res) => {
+scrapeController.getEventSchedule = async (req, res) => {
   console.log(["INFO", "(scrapeController)", "REQUEST SCHEDULES"]);
+
 
   res.status(200).json({
     success: true,
-    data: JSON.parse(scheduleObject)
-  })
+    data: JSON.parse(masterObject.schedule)
+  });
+
 
 }
 

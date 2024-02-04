@@ -23,16 +23,16 @@ http.createServer(app).listen(port, ()=>{
 	console.log("[APP]", `Listening on port ...${port}`)
 });
 
-https.createServer(
-	{
-	  key: fs.readFileSync("privkey.pem"),
-	  cert: fs.readFileSync("fullchain.pem")	
-	},
-        app
-     )
-     .listen(ssl_port, ()=>{
-	    console.log("[APP]", `SSL Listening on port ...${ssl_port}`)
-     });
+// https.createServer(
+// 	{
+// 	  key: fs.readFileSync("privkey.pem"),
+// 	  cert: fs.readFileSync("fullchain.pem")	
+// 	},
+//         app
+//      )
+//      .listen(ssl_port, ()=>{
+// 	    console.log("[APP]", `SSL Listening on port ...${ssl_port}`)
+//      });
 
 app.use('/api/v1', routes);
 
